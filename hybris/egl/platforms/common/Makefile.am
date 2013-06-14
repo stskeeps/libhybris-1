@@ -6,6 +6,11 @@ libhybris_eglplatformcommon_la_SOURCES = \
 	nativewindowbase.cpp \
 	eglplatformcommon.cpp
 
+eglplatformcommonincludedir = $(includedir)/hybris/eglplatformcommon
+eglplatformcommoninclude_HEADERS = \
+        nativewindowbase.h \
+	support.h
+
 if WANT_WAYLAND
 lib_LTLIBRARIES += libwayland-egl.la
 

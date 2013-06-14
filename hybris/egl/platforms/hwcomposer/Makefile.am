@@ -1,5 +1,9 @@
 lib_LTLIBRARIES = libhybris-hwcomposerwindow.la
 
+hwcomposerwindowincludedir = $(includedir)/hybris/hwcomposerwindow
+hwcomposerwindowinclude_HEADERS = \
+        hwcomposer_window.h
+
 libhybris_hwcomposerwindow_la_SOURCES = \
 	hwcomposer_window.cpp
 
