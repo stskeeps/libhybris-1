@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#ifndef HWCOMPOSER_WINDOW_H
-#define HWCOMPOSER_WINDOW_H
+#ifndef FBDEV_WINDOW_H
+#define FBDEV_WINDOW_H
 
 #include "nativewindowbase.h"
+#include <linux/fb.h>
 #include <android/hardware/gralloc.h>
 
 #include <list>
@@ -30,12 +31,12 @@ protected:
     HWComposerNativeWindowBuffer(unsigned int width,
                             unsigned int height,
                             unsigned int format,
-                            unsigned int usage,
-			    int fenceFd);
+                            unsigned int usage) ;
    virtual ~HWComposerNativeWindowBuffer() ;
-private:
-   int fenceFd;
-   int rendered;
+
+protected:
+    int busy;
+    int fenceFd;
 };
 
 
@@ -43,9 +44,12 @@ class HWComposerNativeWindow : public BaseNativeWindow {
 public:
     HWComposerNativeWindow(unsigned int width, unsigned int height, unsigned int format);
     ~HWComposerNativeWindow();
+    void setup(gralloc_module_t* gralloc, alloc_device_t* alloc);
 
-    void setup(gralloc_module_t* gralloc, alloc_device_t *alloc); 
-    void lockBuffers(ANativeWindowBuffer **front, ANativeWindowBuffer **back);
+
+    void lockFrontBuffer(HWComposerNativeWindowBuffer **buffer);
+    void unlockFrontBuffer(HWComposerNativeWindowBuffer *buffer);
+
 protected:
     // overloads from BaseNativeWindow
     virtual int setSwapInterval(int interval);
@@ -73,13 +77,17 @@ private:
     void destroyBuffers();
 
 private:
+    framebuffer_device_t* m_fbDev;
     alloc_device_t* m_alloc;
     unsigned int m_usage;
-    unsigned int m_width;
-    unsigned int m_height;
     unsigned int m_bufFormat;
+    int m_freeBufs;
+    std::list<HWComposerNativeWindowBuffer*> m_bufList;
     HWComposerNativeWindowBuffer* m_frontBuf;
-    HWComposerNativeWindowBuffer* m_backBuf;
+
+    int m_width;
+    int m_height;
+
 };
 
 #endif

@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 	layer->flags = 0;
 	layer->handle = 0;
 	layer->transform = 0;
-	layer->blending = HWC_BLENDING_PREMULT;
+	layer->blending = HWC_BLENDING_NONE;
 	layer->sourceCrop = r;
 	layer->displayFrame = r;
 	layer->visibleRegionScreen.numRects = 1;
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 	//glViewport ( 0 , 0 , 800, 600); // commented out so it uses the initial window dimensions
 	glClearColor ( 1. , 1. , 1. , 1.);    // background color
 	float phase = 0;
-	int i, oldretire = -1, oldrelease = -1;
+	int i, oldretire = -1, oldrelease = -1, oldrelease2 = -1;
 	for (i=0; i<1020*60; ++i) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUniform1f ( phase_loc , phase );  // write the value of phase to the shaders phase
@@ -237,26 +237,36 @@ int main(int argc, char **argv)
 
 		eglSwapBuffers ( (EGLDisplay) display, surface );  // get the rendered buffer to the screen
 
-		ANativeWindowBuffer *front, *back;	
-		win->lockBuffers(&front, &back);	
+		HWComposerNativeWindowBuffer *front;	
+		win->lockFrontBuffer(&front);	
 
-		mList[0]->hwLayers[0].handle = front->handle;
-		mList[0]->hwLayers[1].handle = back->handle;
+		mList[0]->hwLayers[1].handle = front->handle;
+		mList[0]->hwLayers[0].handle = NULL;
+		mList[0]->hwLayers[0].flags = HWC_SKIP_LAYER;
 
 		oldretire = mList[0]->retireFenceFd;
-		oldrelease = mList[0]->hwLayers[0].releaseFenceFd;
+		oldrelease = mList[0]->hwLayers[1].releaseFenceFd;
+		oldrelease2 = mList[0]->hwLayers[0].releaseFenceFd;
+
 		int err = hwcDevicePtr->prepare(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, mList);
 		assert(err == 0);		
 
-		assert(mList[0]->hwLayers[0].compositionType == HWC_OVERLAY);
-
 		err = hwcDevicePtr->set(hwcDevicePtr, HWC_NUM_DISPLAY_TYPES, mList);
 		assert(err == 0);
+		
+		assert(mList[0]->hwLayers[0].releaseFenceFd == -1);
+	
+		win->unlockFrontBuffer(front);
 
 		if (oldrelease != -1)
 		{
 			sync_wait(oldrelease, -1);
 			close(oldrelease);
+		}
+		if (oldrelease2 != -1)
+		{
+			sync_wait(oldrelease2, -1);
+			close(oldrelease2);
 		}
 		if (oldretire != -1)
 		{
