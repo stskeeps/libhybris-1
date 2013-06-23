@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include "config.h"
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef WANT_WAYLAND
 #include <wayland-client.h>
@@ -19,7 +23,7 @@ extern "C" void eglplatformcommon_init(gralloc_module_t *gralloc)
 	my_gralloc = gralloc;
 }
 
-int hybris_register_buffer_handle(buffer_handle_t handle)
+extern "C" int hybris_register_buffer_handle(buffer_handle_t handle)
 {
 	if (!my_gralloc)
 		return -1;
@@ -27,12 +31,24 @@ int hybris_register_buffer_handle(buffer_handle_t handle)
 	return my_gralloc->registerBuffer(my_gralloc, handle);
 }
 
-int hybris_unregister_buffer_handle(buffer_handle_t handle)
+extern "C" int hybris_unregister_buffer_handle(buffer_handle_t handle)
 {
 	if (!my_gralloc)
 		return -1;
 
 	return my_gralloc->unregisterBuffer(my_gralloc, handle);
+}
+
+extern "C" void hybris_dump_buffer_to_file(ANativeWindowBuffer *buf)
+{
+	void *vaddr;
+	printf("gralloc lock %i\n", my_gralloc->lock(my_gralloc, buf->handle, buf->usage, 0, 0, buf->width, buf->height, &vaddr));
+	printf("lock to vaddr %p\n", vaddr);
+	char b[1024];
+	sprintf(b, "vaddr.%p.%i", vaddr, time(NULL));
+	int fd = ::open(b, O_WRONLY|O_CREAT, S_IRWXU);
+	::write(fd, vaddr, buf->width * buf->height * 4);
+	::close(fd);
 }
 
 #ifdef WANT_WAYLAND
