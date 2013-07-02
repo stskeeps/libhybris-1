@@ -146,10 +146,13 @@ AC_CONFIG_FILES([
 	egl/platforms/fbdev/Makefile
 	egl/platforms/wayland/Makefile
 	egl/platforms/hwcomposer/Makefile
+	egl/platforms/hwcomposer/hwcomposer-egl.pc
 	glesv2/glesv2.pc
 	glesv2/Makefile
 	hardware/Makefile
+	hardware/libhardware.pc
 	libsync/Makefile
+	libsync/libsync.pc
 	ui/Makefile
 	sf/Makefile
 	input/Makefile
